@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+#[of]:imports
+import os
+import sys
+
+import yaml
+import json
+#[cf]
+#[of]:functions
+#[of]:rest
+def to_yaml(data):
+    return yaml.safe_dump(data, indent=2, default_flow_style=False, explicit_start=True)
+def to_json(data):
+    return json.dumps(data)
+#[cf]
+#[cf]
+#[of]:main
+#[of]:select action based on prog name
+if os.path.basename(__file__) == 'yaml2json':
+  y2j = True
+else:
+  y2j = False
+#[cf]
+#[of]:parse command line args
+args = sys.argv[1:]
+if len(args) == 1 and args[0] == '-':
+  del args[0]
+#[cf]
+#[of]:read yaml/json data from stdin/file into dict
+if len(args) == 0:
+  if y2j:
+    try:
+      dat = yaml.full_load(sys.stdin.read())
+    except yaml.YAMLError as exc:
+      print(exc)
+      sys.exit(1)
+  else:
+    try:
+      dat = json.loads(sys.stdin.read())
+    except ValueError as exc:
+      print(exc)
+      sys.exit(1)
+elif len(args) > 0:
+  file_in = args[0]
+  if not os.path.exists(file_in):
+    print(file_in + " not found!")
+    sys.exit(1)
+  with open(file_in, 'r') as f:
+    if y2j:
+      try:
+        dat = yaml.full_load(f)
+      except yaml.YAMLError as exc:
+        print("yaml error" + exc)
+        sys.exit(1)
+    else:
+      try:
+        dat = json.load(f)
+      except ValueError as exc:
+        print("json error" + exc)
+        sys.exit(1)
+    f.close()
+#[cf]
+#[of]:write dict to file/stdout as yaml/json
+if len(args) > 1:
+  file_out = args[1]
+  if y2j:
+    dat_out = to_json(dat)
+  else:
+    dat_out = to_yaml(dat)
+  with open(file_out, 'w') as f:
+    f.write(str(dat_out))
+    f.close()
+else:
+  if y2j:
+    print(to_json(dat))
+  else:
+    print(to_yaml(dat))
+#[cf]
+#[cf]
+# vim:number:tabstop=2:shiftwidth=2:autoindent:foldmethod=marker:foldlevel=0:foldmarker=#[of],#[cf]
